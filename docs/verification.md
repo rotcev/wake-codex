@@ -34,6 +34,21 @@ the integrated service path is covered by non-model tests. Do not conflate them.
   die after sending a message but before recording its acknowledgment.
 - No guarantee that every Codex app/CLI version consumes external queued messages.
 - No test of restoring running jobs after a host reboot.
-- No supported Windows runtime (`fcntl` is used for process locks).
+- Windows requires a local filesystem with ACL support and a native Codex executable.
 - Queue mode inherits existing session settings; it is not a new security sandbox.
 - A model can fail after receiving a correct callback. Inspect its result.
+
+## Windows port verification
+
+The native Windows test suite was exercised with Python 3.12 and a fake Codex
+queue: detached start/health/stop, wrapped job completion, authenticated HTTP
+callbacks, duplicate suppression, lock contention/release, process liveness,
+private inherited state ACLs, and Unicode continuations. These tests make no
+model calls. The CI matrix includes Windows with Python 3.10 and 3.13; adding
+those jobs is not evidence that hosted CI has passed.
+
+The desktop-matching native Codex CLI 0.159.2 supports `queue --help` on the
+Windows test host. A separately authorized live dummy job completed, queued its
+continuation into the same desktop chat, and produced the requested automatic
+reply. This verifies that one Windows desktop setup; other client versions and
+remote hosts still require their own live check.

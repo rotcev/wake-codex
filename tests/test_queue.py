@@ -13,6 +13,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 import wakecodex as wake
+from platform_support import require_process
 
 
 class QueueTests(unittest.TestCase):
@@ -124,6 +125,15 @@ class QueueTests(unittest.TestCase):
             while (state / "endpoint.json").exists() and time.monotonic() < deadline:
                 time.sleep(0.02)
             self.assertFalse((state / "endpoint.json").exists())
+            # Windows cannot unlink redirected logs until the process closes them.
+            while time.monotonic() < deadline:
+                try:
+                    require_process(health["pid"])
+                except ProcessLookupError:
+                    break
+                time.sleep(0.02)
+            else:
+                self.fail("Listener did not exit after stop")
 
     def test_http_to_real_subprocess_queue_and_duplicate_suppression(self):
         # A real HTTP listener and queue subprocess, but deliberately no AI.

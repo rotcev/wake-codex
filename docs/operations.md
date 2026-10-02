@@ -1,7 +1,10 @@
 # Operations
 
 Use one absolute state path consistently. All examples use `WAKE_STATE` set to
-that path. Registration JSON includes a secret; use `umask 077` and keep it private.
+that path. Registration JSON includes a secret; use `umask 077` on Unix and keep
+it private. On Windows, use a dedicated local state directory with Windows ACL
+support. Wake Codex protects that directory for the current user before writing
+secrets; new files inherit its ACL. See the README for PowerShell commands.
 
 ## Service lifecycle
 
@@ -50,7 +53,9 @@ python3 scripts/watch_job.py --state "$WAKE_STATE" --wait-id WAIT_UUID \
 ```
 
 Run it through your process supervisor for long jobs. It uses macOS kernel
-file/process notifications; other Unix platforms use lightweight Python waits.
+file/process notifications; Linux and Windows use lightweight Python waits.
+Windows PID checks use a process handle without sending a signal or terminating
+the observed process.
 It expects records with `type`, `experiment_id` and `step`, for example:
 
 ```json

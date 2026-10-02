@@ -13,6 +13,7 @@ from pathlib import Path
 
 import wakecodex as wake
 from idle_gate import FileSignal
+from platform_support import require_process
 
 
 def terminal_event(row, experiment, minimum_step):
@@ -47,9 +48,10 @@ def watch(store, wait_id, path, experiment, minimum_step, pid=None, timeout=8640
     path = Path(path).resolve(strict=True)
     store.get(wait_id)
     cursor = store.root / (wait_id + ".watch.json")
+    if pid:
+        require_process(pid)  # Permission failure is not evidence that a process died.
     signal = FileSignal(path)
     if pid:
-        os.kill(pid, 0)  # Permission failure is not evidence that a process died.
         if signal.queue:
             signal.queue.control(
                 [
@@ -122,7 +124,7 @@ def watch(store, wait_id, path, experiment, minimum_step, pid=None, timeout=8640
                 return dict(status="wait_no_longer_pending")
             if pid:
                 try:
-                    os.kill(pid, 0)
+                    require_process(pid)
                 except ProcessLookupError:
                     if not exit_seen:
                         # Drain a final record written between the last read

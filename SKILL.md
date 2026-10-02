@@ -6,8 +6,14 @@ description: Run authorized long jobs and queue a continuation in the existing C
 # Wake Codex
 
 Resolve `scripts/wakecodex.py` relative to this installed skill. Python 3.10+,
-macOS/Linux, no third-party packages. Read [operations](docs/operations.md) for
+Windows/macOS/Linux, no third-party packages. Read [operations](docs/operations.md) for
 callbacks, watchers or recovery; [verification](docs/verification.md) for evidence.
+
+On Windows, use the desktop-matching native `codex.exe`, not a `.cmd` shim.
+Use an absolute Python executable path if Python is not on PATH. Choose a dedicated
+local state directory (for example `%LOCALAPPDATA%/WakeCodex/state`); the listener
+restricts its Windows ACL before writing secrets and launches without a console.
+Successful installation or queue acceptance does not establish an automatic reply.
 
 ## Use the native queue
 

@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import argparse
 import contextlib
-import fcntl
 import hmac
 import json
 import os
@@ -24,6 +23,8 @@ import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
+from platform_support import executable_command, lock_file, private_directory, process_options
+
 MAX_EVENT = 64 * 1024
 VERSION = "0.4.0"
 TERMINAL_EVENTS = ("completed", "failed", "paused", "needs_review", "cancelled")
@@ -32,7 +33,10 @@ TERMINAL_EVENTS = ("completed", "failed", "paused", "needs_review", "cancelled")
 class Store:
     def __init__(self, root):
         self.root = Path(root).expanduser().resolve()
-        self.root.mkdir(parents=True, exist_ok=True, mode=0o700)
+        private_directory(self.root)
+        # Packaged Windows apps can redirect a newly created LocalAppData path.
+        # Resolve again so parent and detached child report the same state identity.
+        self.root = self.root.resolve()
         with self.connect() as db:
             db.execute("PRAGMA journal_mode=WAL")
             db.execute("""CREATE TABLE IF NOT EXISTS waits (
@@ -200,7 +204,7 @@ class CodexAdapter:
         if guard_path.exists():
             from idle_gate import require_idle
 
-            guard = json.loads(guard_path.read_text())
+            guard = json.loads(guard_path.read_text(encoding="utf-8"))
             if guard["thread"] != wait["thread_id"]:
                 raise RuntimeError("Guard targets a different thread")
             require_idle(guard)
@@ -211,11 +215,11 @@ class CodexAdapter:
             old = root / f"{wait['id']}.{suffix}"
             if old.exists():
                 old.rename(root / f"{wait['id']}.previous-{attempt}.{suffix}")
-        (root / f"{wait['id']}.prompt.txt").write_text(prompt)
+        (root / f"{wait['id']}.prompt.txt").write_text(prompt, encoding="utf-8")
         if self.dry_run:
             return "previewed"
         args = [
-            self.executable,
+            *executable_command(self.executable),
             "exec",
             "--cd",
             wait["cwd"],
@@ -234,24 +238,26 @@ class CodexAdapter:
         args += [wait["thread_id"], "-"]
         # Logs stay out of the prompt; only explicit result references go to the model.
         with (
-            (root / f"{wait['id']}.codex.jsonl").open("w") as out,
-            (root / f"{wait['id']}.codex.stderr").open("w") as err,
+            (root / f"{wait['id']}.codex.jsonl").open("w", encoding="utf-8") as out,
+            (root / f"{wait['id']}.codex.stderr").open("w", encoding="utf-8") as err,
         ):
             result = subprocess.run(
                 args,
                 input=prompt,
                 text=True,
+                encoding="utf-8",
                 cwd=wait["cwd"],
                 stdout=out,
                 stderr=err,
                 timeout=self.timeout,
+                **process_options(),
             )
         if result.returncode:
             raise RuntimeError(f"Codex exited {result.returncode}; inspect the .codex.stderr log")
         # Exit code alone is insufficient if the CLI emitted a failed turn.
         completed = False
         matched_thread = False
-        with (root / f"{wait['id']}.codex.jsonl").open() as stream:
+        with (root / f"{wait['id']}.codex.jsonl").open(encoding="utf-8") as stream:
             for line in stream:
                 try:
                     msg = json.loads(line)
@@ -309,13 +315,20 @@ class QueueAdapter:
             old = root / f"{wait['id']}.{suffix}"
             if old.exists():
                 old.rename(root / f"{wait['id']}.previous-{attempt}.{suffix}")
-        (root / f"{wait['id']}.prompt.txt").write_text(prompt)
+        (root / f"{wait['id']}.prompt.txt").write_text(prompt, encoding="utf-8")
         if self.dry_run:
             return "previewed"
-        args = [self.executable, "queue", "--thread", wait["thread_id"], "--message", prompt]
+        args = [
+            *executable_command(self.executable),
+            "queue",
+            "--thread",
+            wait["thread_id"],
+            "--message",
+            prompt,
+        ]
         with (
-            (root / f"{wait['id']}.queue.stdout").open("w") as out,
-            (root / f"{wait['id']}.queue.stderr").open("w") as err,
+            (root / f"{wait['id']}.queue.stdout").open("w", encoding="utf-8") as out,
+            (root / f"{wait['id']}.queue.stderr").open("w", encoding="utf-8") as err,
         ):
             result = subprocess.run(
                 args,
@@ -324,12 +337,13 @@ class QueueAdapter:
                 stdout=out,
                 stderr=err,
                 timeout=self.timeout,
+                **process_options(),
             )
         if result.returncode:
             raise RuntimeError(
                 f"Codex queue exited {result.returncode}; inspect .queue.stderr before retrying"
             )
-        output = (root / f"{wait['id']}.queue.stdout").read_text().strip()
+        output = (root / f"{wait['id']}.queue.stdout").read_text(encoding="utf-8").strip()
         ack = re.fullmatch(
             r"Queued message ([0-9a-fA-F-]{36}) for thread ([0-9a-fA-F-]{36})\.", output
         )
@@ -373,7 +387,7 @@ def dispatch_once(store, adapter):
 def poke(store):
     """HTTP is the fast path; durable DB reconciliation covers missed nudges."""
     try:
-        info = json.loads((store.root / "endpoint.json").read_text())
+        info = json.loads((store.root / "endpoint.json").read_text(encoding="utf-8"))
         req = urllib.request.Request(
             info["url"] + "/poke", data=b"{}", headers={"Authorization": "Bearer " + info["token"]}
         )
@@ -385,9 +399,9 @@ def poke(store):
 
 def run_job(store, wait_id):
     store.get(wait_id)  # Validate before using the ID in a filename.
-    with (store.root / f"{wait_id}.job.lock").open("a") as lock:
+    with (store.root / f"{wait_id}.job.lock").open("a+b") as lock:
         try:
-            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            lock_file(lock)
         except BlockingIOError:
             return
         wait = store.get(wait_id)
@@ -416,6 +430,7 @@ def _execute_job(store, wait):
                 stdin=subprocess.DEVNULL,
                 stdout=output,
                 stderr=subprocess.STDOUT,
+                **process_options(),
             )
         event = {
             "status": "completed" if result.returncode == 0 else "failed",
@@ -431,7 +446,7 @@ def _execute_job(store, wait):
 def service_health(store):
     """Never mistake a stale endpoint file for a live dispatcher."""
     try:
-        info = json.loads((store.root / "endpoint.json").read_text())
+        info = json.loads((store.root / "endpoint.json").read_text(encoding="utf-8"))
         req = urllib.request.Request(
             info["url"] + "/health", headers={"Authorization": "Bearer " + info["token"]}
         )
@@ -457,11 +472,19 @@ def start_service(store, args):
                 "Existing service has a different mode/version. Stop it deliberately before restarting."
             )
         return current
-    if not args.dry_run and not shutil.which(args.codex):
+    if not args.dry_run and not (
+        shutil.which(args.codex)
+        or (Path(args.codex).suffix.lower() == ".py" and Path(args.codex).is_file())
+    ):
         raise RuntimeError("Codex executable not found; set --codex to its absolute path")
     if not args.dry_run and args.backend == "queue":
         check = subprocess.run(
-            [args.codex, "queue", "--help"], capture_output=True, text=True, timeout=10
+            [*executable_command(args.codex), "queue", "--help"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            timeout=10,
+            **process_options(),
         )
         if check.returncode or "--thread" not in check.stdout or "--message" not in check.stdout:
             raise RuntimeError(
@@ -491,7 +514,7 @@ def start_service(store, args):
             stdin=subprocess.DEVNULL,
             stdout=log,
             stderr=log,
-            start_new_session=True,
+            **process_options(detached=True),
             close_fds=True,
         )
     deadline = time.monotonic() + 10
@@ -528,7 +551,7 @@ def launch_job(store, wait_id):
                 stdin=subprocess.DEVNULL,
                 stdout=log,
                 stderr=log,
-                start_new_session=True,
+                **process_options(detached=True),
                 close_fds=True,
             )
     except OSError as exc:
@@ -615,7 +638,8 @@ def make_server(store, adapter, port=0):
     endpoint = store.root / "endpoint.json"
     temporary = store.root / "endpoint.tmp"
     temporary.write_text(json.dumps({"url": url, "token": token}))
-    temporary.chmod(0o600)
+    if os.name != "nt":
+        temporary.chmod(0o600)
     temporary.replace(endpoint)
     # Reuse the chosen port after restart so issued callback URLs stay valid.
     settings = store.root / "listener.json"
@@ -641,14 +665,16 @@ def make_server(store, adapter, port=0):
 
 
 def serve(store, adapter, port):
-    with (store.root / "service.lock").open("w") as lock:
+    with (store.root / "service.lock").open("a+b") as lock:
         try:
-            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            lock_file(lock)
         except BlockingIOError:
             raise RuntimeError("Another service already owns this state directory")
         if port is None:
             settings = store.root / "listener.json"
-            port = json.loads(settings.read_text())["port"] if settings.exists() else 0
+            port = (
+                json.loads(settings.read_text(encoding="utf-8"))["port"] if settings.exists() else 0
+            )
         store.recover()
         server, worker, wake, stop = make_server(store, adapter, port)
         worker.start()
@@ -728,8 +754,8 @@ def main():
     p.add_argument("--file", default="-")
     args = parser.parse_args()
     os.umask(0o077)
-    store = Store(args.state)
     try:
+        store = Store(args.state)
         if args.action in ("start", "serve") and args.resume_timeout <= 0:
             raise ValueError("Resume timeout must be positive")
         if args.action == "serve":
@@ -744,7 +770,7 @@ def main():
             print(json.dumps(result, indent=2))
             return 0 if result.get("healthy") else 1
         elif args.action == "stop":
-            info = json.loads((store.root / "endpoint.json").read_text())
+            info = json.loads((store.root / "endpoint.json").read_text(encoding="utf-8"))
             req = urllib.request.Request(
                 info["url"] + "/stop",
                 data=b"{}",
@@ -784,7 +810,11 @@ def main():
         elif args.action == "show":
             result = store.get(args.id)
         elif args.action == "emit":
-            raw = sys.stdin.read(MAX_EVENT + 1) if args.file == "-" else Path(args.file).read_text()
+            raw = (
+                sys.stdin.read(MAX_EVENT + 1)
+                if args.file == "-"
+                else Path(args.file).read_text(encoding="utf-8")
+            )
             result = {"accepted": store.complete(args.id, json.loads(raw))}
             poke(store)
         elif args.action == "cancel":

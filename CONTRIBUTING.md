@@ -23,6 +23,7 @@ Manual live tests need explicit approval from the owner of the target chat.
 - `scripts/send_event.py`: authenticated producer-side callback client.
 - `scripts/watch_job.py`: optional adapter for existing JSONL job logs.
 - `scripts/idle_gate.py`: file notifications and legacy idle-session diagnostics.
+- `scripts/platform_support.py`: OS locks, process options, liveness and private state.
 - `tests/`: state-machine, adapter, worker and HTTP integration tests.
 - `SKILL.md`: instructions for the Codex agent, kept separate from user docs.
 

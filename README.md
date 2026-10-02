@@ -120,12 +120,12 @@ tested and what still depends on your Codex installation.
   never blindly retried.
 - **Authenticated local callbacks.** The listener binds to `127.0.0.1`; each wait
   has a private callback token.
-- **No Python dependencies.** Standard library only. Python 3.10+, macOS or Linux.
+- **No Python dependencies.** Standard library only. Python 3.10+, Windows, macOS or Linux.
 - **A Codex skill.** Included [SKILL.md](SKILL.md) explains when and how to use it.
 
 ## Requirements
 
-1. Python 3.10 or newer on macOS or Linux. Windows is not currently supported.
+1. Python 3.10 or newer on Windows, macOS or Linux.
 2. An authenticated Codex CLI with **`codex queue --help`** support. The live
    desktop test used CLI **0.159.2**. This is a tested version, not a claim that
    every earlier or later release supports the same behavior.
@@ -152,6 +152,43 @@ python3 scripts/wakecodex.py --state "$WAKE_STATE" doctor
 
 `doctor` should report `healthy: true`, `backend: "queue"`, and `dry_run: false`.
 The OS selects a free localhost port. No model is invoked by these checks.
+
+### Windows (PowerShell)
+
+Use the native `codex.exe` matching your desktop installation and a dedicated
+state directory on a local filesystem that supports Windows ACLs (such as NTFS).
+WSL and administrator access are not required. Use the actual executable rather
+than an npm `codex.cmd` shim.
+
+```powershell
+$wakePython = (Get-Command python.exe).Source
+$wakeCodex = (Get-Command codex.exe).Source
+$wakeState = Join-Path $env:LOCALAPPDATA 'WakeCodex/state'
+& $wakePython scripts/wakecodex.py --state $wakeState start --codex $wakeCodex
+& $wakePython scripts/wakecodex.py --state $wakeState doctor
+```
+
+If Python or Codex is not on PATH, set its variable to the actual absolute
+executable path. State creation restricts the directory ACL to the current user
+before writing secrets. New files inherit that ACL. Always use a dedicated state
+directory, not a shared or project directory. Background processes do not open
+console windows.
+
+Submit an authorized job using the exact saved chat UUID:
+
+```powershell
+& $wakePython scripts/wakecodex.py --state $wakeState submit `
+  --thread YOUR_THREAD_UUID --cwd (Get-Location).Path `
+  --then 'Read the result. Report once, then stop.' `
+  -- $wakePython -c 'import time; time.sleep(10)'
+
+# Stop this listener; jobs and already queued messages are unaffected.
+& $wakePython scripts/wakecodex.py --state $wakeState stop
+```
+
+Registration output contains a callback secret. Keep it private. End the
+submitting turn to allow the queued follow-up, and keep the host awake and the
+owning Codex session available.
 
 ### Wrap a foreground job
 
@@ -237,6 +274,19 @@ The repository root is a self-contained skill. From the cloned repository:
 ```sh
 mkdir -p "$HOME/.codex/skills"
 ln -s "$PWD" "$HOME/.codex/skills/wakecodex"
+```
+
+On Windows, copy the skill files instead of creating a Unix symlink. For a new
+destination only:
+
+```powershell
+$wakeSkills = if ($env:CODEX_HOME) { Join-Path $env:CODEX_HOME 'skills' } else {
+  Join-Path $env:USERPROFILE '.codex/skills'
+}
+$wakeSkill = Join-Path $wakeSkills 'wakecodex'
+if (Test-Path -LiteralPath $wakeSkill) { throw 'Preserve the existing skill first.' }
+New-Item -ItemType Directory -Path $wakeSkill -Force | Out-Null
+Copy-Item README.md, SKILL.md, LICENSE, scripts, docs -Destination $wakeSkill -Recurse
 ```
 
 If `wakecodex` already exists, inspect and back it up before replacing it—do not
