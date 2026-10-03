@@ -88,7 +88,7 @@ class HandoffTests(unittest.TestCase):
         self.assertFalse(goals.inspect(self.client, record)["unchanged_paused_goal"])
         self.client.set_status.assert_not_called()
 
-    def test_untrusted_result_cannot_supply_authorization(self):
+    def test_invalid_handoff_fields_are_rejected(self):
         record = self.capture()
         for field, value in (
             ("conditional_resume_authorized", False),
