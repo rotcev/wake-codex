@@ -56,15 +56,16 @@ the Codex chat you want to receive its result and what the agent should do next.
 ## How the handoff works
 
 ```mermaid
+%%{init: {"flowchart": {"htmlLabels": false}}}%%
 flowchart TD
-    A["Setup: register chat ID + follow-up instruction"] --> B["Wake Codex: durable wait record"]
-    A --> C["Start the job; agent ends its turn"]
-    C --> D["Job finishes, fails, pauses, or needs review"]
-    D --> E["Wrapper or callback reports status + result paths"]
+    A["Register chat UUID<br/>and follow-up"] --> B["Save durable wait"]
+    A --> C["Start job<br/>End agent turn"]
+    C --> D["Job ends or<br/>needs attention"]
+    D --> E["Report status<br/>and result paths"]
     E --> B
-    B -->|"Terminal event received"| F["Native Codex queue: message to the same chat"]
-    F --> G["Owning session consumes the message when ready"]
-    G --> H["Agent reads the results and follows the saved instruction"]
+    B -->|"Event saved"| F["Queue message<br/>to same chat"]
+    F --> G["Owning session<br/>consumes message"]
+    G --> H["Agent reads results<br/>and follows instruction"]
 ```
 
 **The job doesn't need to know your chat ID or how Codex works.** Wake Codex stores
