@@ -95,7 +95,14 @@ while a Goal stayed paused, and Goal continuation after an explicit authorized
 activation. A subsequent agent-mediated test verified the actual job log and
 stored wait, compared the complete saved paused Goal, reread immediately before
 setting only status, and completed with `WAKE_CODEX_AGENT_HANDOFF_PASS`. The test
-Goal subsequently became absent. Queue acceptance alone is insufficient evidence.
+Goal subsequently became absent. A further owner-instructed setup turn in the
+same test chat created its test Goal, registered/launched a harmless dummy job,
+saved the trusted wait binding, paused its own Goal, captured the snapshot and
+ended the turn. The external completion automatically woke that same chat; its
+separate inspection turn verified the actual result and unchanged Goal, deliberately
+resumed status only and replied `WAKE_CODEX_SELF_ARM_RESUME_PASS`. The Goal then
+became absent. This setup began as an owner-instructed turn, not an already running
+autonomous Goal turn. Queue acceptance alone is insufficient evidence.
 These checks do
 not establish arbitrary versions, hosts, workflows or concurrent Goal safety.
 
