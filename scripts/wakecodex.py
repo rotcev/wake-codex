@@ -12,6 +12,7 @@ import re
 import secrets
 import shutil
 import signal
+import socketserver
 import sqlite3
 import subprocess
 import sys
@@ -28,6 +29,14 @@ from platform_support import executable_command, lock_file, private_directory, p
 MAX_EVENT = 64 * 1024
 VERSION = "0.4.0"
 TERMINAL_EVENTS = ("completed", "failed", "paused", "needs_review", "cancelled")
+
+
+class LoopbackHTTPServer(ThreadingHTTPServer):
+    def server_bind(self):
+        # HTTPServer resolves a hostname here. This loopback-only listener needs
+        # no DNS; a slow resolver must not delay endpoint publication/health.
+        socketserver.TCPServer.server_bind(self)
+        self.server_name, self.server_port = self.server_address[:2]
 
 
 class Store:
@@ -632,7 +641,7 @@ def make_server(store, adapter, port=0):
             except sqlite3.Error:
                 self.reply(503, {"error": "Store unavailable; retry this event later"})
 
-    server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
+    server = LoopbackHTTPServer(("127.0.0.1", port), Handler)
     server.daemon_threads = True
     url = f"http://127.0.0.1:{server.server_port}"
     endpoint = store.root / "endpoint.json"
