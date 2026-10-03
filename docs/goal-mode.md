@@ -103,6 +103,17 @@ separate inspection turn verified the actual result and unchanged Goal, delibera
 resumed status only and replied `WAKE_CODEX_SELF_ARM_RESUME_PASS`. The Goal then
 became absent. This setup began as an owner-instructed turn, not an already running
 autonomous Goal turn. Queue acceptance alone is insufficient evidence.
+A final bounded test observed the autonomous path: after the seed turn created
+an active test Goal and ended, the Goal engine's subsequent continuation itself
+registered/launched the dummy job, saved the trusted binding, paused/captured its
+Goal and ended. The chat remained idle and the paused record stayed unchanged.
+External completion automatically woke a separate inspection turn, which verified
+the real result, compared/reread the Goal, deliberately resumed status only and
+replied `WAKE_CODEX_AUTONOMOUS_GOAL_WAKE_PASS`; the Goal then became absent.
+The seed's local exact-string assertion had failed because the API trimmed the
+objective file's trailing newline; it reported that ambiguity and did not retry.
+The already-created active Goal nevertheless scheduled its continuation. The
+handoff compared returned Goal records, not the unnormalized objective file.
 These checks do
 not establish arbitrary versions, hosts, workflows or concurrent Goal safety.
 
