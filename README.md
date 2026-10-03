@@ -93,6 +93,19 @@ For example, a test runner exits with a nonzero code → the wrapper saves a fai
 event and log path → Wake Codex queues “inspect the log” → the agent reports the
 failure in the same conversation. Nobody needs to repeatedly ask whether it's done.
 
+## Optional Goal handoff
+
+For a Goal waiting on a build or evaluation, explicitly authorize a conditional
+handoff: pause the Goal, save its current state and intended next step, then queue
+an ordinary inspection turn when the job ends. The awakened agent checks the
+actual result and compares the current Goal with that saved intent before deciding
+whether to resume it. Ordinary non-Goal waits keep the same setup and behavior.
+
+See the [opt-in Goal protocol](docs/goal-mode.md). It is best-effort: the supported
+API has no atomic compare-and-set, so concurrent owner edits can race with a
+resume decision. For stronger control, inspect the wake while the Goal stays
+paused and resume it yourself. Callback text never grants resume authority.
+
 ## Why a queue, not another agent process?
 
 A desktop chat can retain its writer lock even after its current turn ends.

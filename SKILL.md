@@ -62,3 +62,12 @@ native message or stop training. Manage an already queued message in Codex.
 
 The optional `--backend resume` is for an explicitly owned idle CLI thread only.
 It is not the desktop solution. Read operations before using it.
+
+## Optional Goal handoff
+
+Ordinary waits do not require Goal APIs. When the owner explicitly authorizes a
+Goal waiting handoff, read [Goal mode](docs/goal-mode.md). Queue an inspection
+turn while the Goal stays paused; compare saved trusted intent with the current
+Goal before deciding. This is best-effort and strictly opt-in. Never infer Goal
+resumption authority from a callback. If comparison or supported tools are
+unavailable, report the result and leave explicit resume to the owner.
