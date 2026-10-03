@@ -1,4 +1,4 @@
-# Opt-in Goal handoff (local review prototype)
+# Opt-in Goal handoff (best-effort)
 
 Ordinary Wake Codex waits keep their existing behavior and do not read or change
 Goals. The listener and queue adapter never import `goal_handoff.py`. A native
@@ -29,8 +29,9 @@ required for ordinary waits.
    ```
 
    The helper requires an existing paused Goal and creates a new private file
-   without overwriting another handoff. Store it separately from producer logs,
-   result JSON and callback credentials, outside version control. On Windows,
+   without overwriting another handoff. Store it in an owner-only directory that the producer cannot write, separately
+   from producer logs, result JSON and callback credentials, outside version
+   control. A producer able to alter the intent file defeats this trust boundary. On Windows,
    choose an owner-only directory; POSIX mode 0600 alone is not a Windows ACL.
 3. Register a normal wait using the queue backend. Put the trusted inspection
    instruction below in `--then`, substituting the exact private handoff path,

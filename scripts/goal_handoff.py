@@ -12,7 +12,7 @@ from platform_support import executable_command, process_options
 
 
 class GoalClient:
-    """Short-lived public API client; never resumes or takes ownership of a thread."""
+    """Public API client: no thread/resume or writer lock; status mutation is explicit."""
 
     def __init__(self, executable, timeout=10):
         self.executable, self.timeout = executable, timeout
