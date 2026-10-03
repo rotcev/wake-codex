@@ -1,5 +1,7 @@
 # Wake Codex
 
+[![Tests](https://github.com/rotcev/wake-codex/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/rotcev/wake-codex/actions/workflows/tests.yml)
+
 ### Let the job finish. Then wake the agent.
 
 **Event-driven continuations for Codex. No model polling while you wait.**
