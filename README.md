@@ -55,18 +55,7 @@ the Codex chat you want to receive its result and what the agent should do next.
 
 ## How the handoff works
 
-```mermaid
-%%{init: {"flowchart": {"htmlLabels": false}}}%%
-flowchart TD
-    A["Register chat UUID<br/>and follow-up"] --> B["Save durable wait"]
-    A --> C["Start job<br/>End agent turn"]
-    C --> D["Job ends or<br/>needs attention"]
-    D --> E["Report status<br/>and result paths"]
-    E --> B
-    B -->|"Event saved"| F["Queue message<br/>to same chat"]
-    F --> G["Owning session<br/>consumes message"]
-    G --> H["Agent reads results<br/>and follows instruction"]
-```
+![Wake Codex handoff: register a chat and follow-up, save a durable wait, run the job and report its status and result paths, then queue a message to the same chat so the owning session can resume the agent.](docs/handoff.svg)
 
 **The job doesn't need to know your chat ID or how Codex works.** Wake Codex stores
 that mapping. A wrapper can detect a foreground job's exit without changing its

@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="1090" viewBox="0 0 480 1090" role="img" aria-labelledby="title desc">
+<title id="title">Wake Codex handoff</title>
+<desc id="desc">Register the chat UUID and follow-up, which saves a durable wait and starts a job. End the agent turn. When the job ends or needs attention, report status and result paths to the saved wait. Once the event is saved, queue a message to the same chat. The owning session consumes the message, then the agent reads results and follows the instruction.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/></marker></defs>
+<rect width="480" height="1090" rx="16" fill="#f8fafc"/>
+<g fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)">
+<path d="M310 110V150"/><path d="M310 240V280"/><path d="M310 370V410"/><path d="M310 500V540"/>
+<path d="M160 65H60Q40 65 40 85V565Q40 585 60 585H160"/>
+<path d="M310 630V700"/><path d="M310 790V830"/><path d="M310 920V960"/>
+</g>
+<rect x="249" y="650" width="122" height="28" rx="14" fill="#e2e8f0"/>
+<text x="310" y="669" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="15" fill="#475569">Event saved</text>
+<g id="register">
+<rect x="160" y="20" width="300" height="90" rx="10" fill="white" stroke="#cbd5e1" stroke-width="1.5"/>
+<text x="310" y="58" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="20" fill="#0f172a">Register chat UUID</text>
+<text x="310" y="84" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="20" fill="#0f172a">and follow-up</text>
+</g>
+<g id="job">
+<rect x="160" y="150" width="300" height="90" rx="10" fill="white" stroke="#cbd5e1" stroke-width="1.5"/>
+<text x="310" y="188" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="20" fill="#0f172a">Start job</text>
+<text x="310" y="214" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="20" fill="#0f172a">End agent turn</text>
+</g>
+<g id="event">
+<rect x="160" y="280" width="300" height="90" rx="10" fill="white" stroke="#cbd5e1" stroke-width="1.5"/>
+<text x="310" y="318" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="20" fill="#0f172a">Job ends or</text>
+<text x="310" y="344" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="20" fill="#0f172a">needs attention</text>
+</g>
+<g id="report">
+<rect x="160" y="410" width="300" height="90" rx="10" fill="white" stroke="#cbd5e1" stroke-width="1.5"/>
+<text x="310" y="448" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="20" fill="#0f172a">Report status</text>
+<text x="310" y="474" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="20" fill="#0f172a">and result paths</text>
+</g>
+<g id="wait">
+<rect x="160" y="540" width="300" height="90" rx="10" fill="white" stroke="#cbd5e1" stroke-width="1.5"/>
+<text x="310" y="592" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="20" fill="#0f172a">Save durable wait</text>
+</g>
+<g id="queue">
+<rect x="160" y="700" width="300" height="90" rx="10" fill="white" stroke="#cbd5e1" stroke-width="1.5"/>
+<text x="310" y="738" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="20" fill="#0f172a">Queue message</text>
+<text x="310" y="764" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="20" fill="#0f172a">to same chat</text>
+</g>
+<g id="session">
+<rect x="160" y="830" width="300" height="90" rx="10" fill="white" stroke="#cbd5e1" stroke-width="1.5"/>
+<text x="310" y="868" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="20" fill="#0f172a">Owning session</text>
+<text x="310" y="894" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="20" fill="#0f172a">consumes message</text>
+</g>
+<g id="agent">
+<rect x="160" y="960" width="300" height="90" rx="10" fill="white" stroke="#cbd5e1" stroke-width="1.5"/>
+<text x="310" y="998" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="20" fill="#0f172a">Agent reads results</text>
+<text x="310" y="1024" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="20" fill="#0f172a">and follows instruction</text>
+</g>
+</svg>
