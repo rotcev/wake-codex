@@ -55,7 +55,7 @@ the Codex chat you want to receive its result and what the agent should do next.
 
 ## How the handoff works
 
-![Wake Codex handoff: register the chat and follow-up, persist a durable wait before starting the job, save its terminal event to the existing wait, and queue the follow-up to the same chat. An available owning session consumes the message, then the agent inspects results. Queue acceptance does not prove the agent ran.](docs/handoff.svg)
+![Wake Codex handoff: register the chat and follow-up, persist a durable wait before starting the job, save its terminal event to the existing wait, and queue the follow-up to the same chat. An available owning session consumes the message, then the agent inspects results. Queue acceptance does not prove the agent ran.](docs/handoff-flow.svg)
 
 **The job doesn't need to know your chat ID or how Codex works.** Wake Codex stores
 that mapping. A wrapper can detect a foreground job's exit without changing its
