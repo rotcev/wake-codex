@@ -24,9 +24,11 @@ do not spend model tokens. Coverage includes terminal states, duplicate suppress
 durable restart, real worker exit, file event watching, authentication, matching
 queue acknowledgments, cancellation, and no automatic retry after ambiguity.
 
-The combined 0.4.0 real-job → listener → real desktop chain has not yet received
-a separate live end-to-end certification. The native queue path was tested live;
-the integrated service path is covered by non-model tests. Do not conflate them.
+The integrated dummy-job → listener → native queue → same desktop chat →
+automatic reply chain was tested live on the Windows setup described below.
+The earlier October 1 test established native queue transport only. Neither
+test establishes integrated live coverage on every OS, client version, or host;
+the cross-platform service tests use a fake queue and make no model calls.
 
 ## Boundaries
 

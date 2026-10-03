@@ -190,6 +190,23 @@ Registration output contains a callback secret. Keep it private. End the
 submitting turn to allow the queued follow-up, and keep the host awake and the
 owning Codex session available.
 
+### Find the exact thread UUID
+
+For a Codex app chat, use its host-provided thread identity or copy its chat link
+and take the UUID from `codex://threads/UUID`. Confirm that the link identifies
+the intended chat; a title, project ID, or installer conversation ID is not enough.
+If your client exposes neither identity nor a chat link, stop and resolve the
+identity in that client before submitting. Never guess or use `--last`.
+
+For a CLI-owned chat, the JSON output from its original `codex exec --json` turn
+contains `thread.started.thread_id`. Retain that exact value and wait for the
+seed turn to complete. Do not create a replacement chat for an existing target.
+Keep the owning host awake and session available, and end the submitting turn.
+
+Callbacks wake the listener immediately. Its ordinary Python database
+reconciliation runs every 30 seconds to recover missed nudges; **zero model
+polling** means no model calls while waiting, not zero background service checks.
+
 ### Wrap a foreground job
 
 Replace `YOUR_THREAD_UUID` with the UUID of the chat you want to continue:

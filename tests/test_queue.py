@@ -76,6 +76,18 @@ class QueueTests(unittest.TestCase):
             run.assert_not_called()
         self.assertEqual(self.store.get(self.wait["id"])["status"], "previewed")
 
+    def test_listener_startup_does_not_require_reverse_dns(self):
+        # Local callbacks must work even when the host resolver stalls or fails.
+        with patch("socket.getfqdn", side_effect=OSError("DNS unavailable")):
+            server, worker, trigger, stop = wake.make_server(
+                self.store, wake.QueueAdapter(dry_run=True)
+            )
+        try:
+            self.assertEqual(server.server_name, "127.0.0.1")
+            self.assertGreater(server.server_port, 0)
+        finally:
+            server.server_close()
+
     def test_detached_cli_service_wraps_job_and_queues_result(self):
         script = Path(__file__).resolve().parents[1] / "scripts" / "wakecodex.py"
         fake = Path(__file__).with_name("fake_codex.py").resolve()

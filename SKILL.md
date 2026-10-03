@@ -26,8 +26,9 @@ chat using Codex CLI 0.159.2. Verify `codex queue --help` on the current install
 use a matching absolute binary path with `--codex` if needed. Queue acceptance,
 visible delivery, agent completion, and successful work are different evidence.
 
-1. Resolve the exact user-authorized thread UUID. Never guess, use `--last`, or
-   silently create a substitute chat.
+1. Resolve the exact user-authorized thread UUID using the host identity or the
+   chat link (`codex://threads/UUID`); see README for CLI JSON discovery. Never
+   guess, use `--last`, or silently create a substitute chat.
 2. Choose one absolute private state directory. Run `start`, then `doctor`;
    require healthy=true, backend=queue, dry_run=false. Do not stop other listeners.
 3. Register `submit --thread UUID --cwd ABS_PROJECT --then INSTRUCTION` before
